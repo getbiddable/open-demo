@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>open-demo — Guide Editor</title>
+  <link rel="stylesheet" href="editor.css" />
+</head>
+<body>
+  <!-- Toolbar -->
+  <header class="toolbar" id="toolbar">
+    <div class="toolbar-left">
+      <div class="logo">
+        <span class="logo-icon">&#9654;</span>
+        <span class="logo-text">open-demo</span>
+      </div>
+      <div class="title-wrap">
+        <input
+          type="text"
+          class="guide-title-input"
+          id="guideTitleInput"
+          placeholder="Untitled Guide"
+          value="Untitled Guide"
+        />
+      </div>
+      <span class="step-count-badge" id="stepCountBadge">0 steps</span>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-outline" id="exportMdBtn">Export Markdown</button>
+      <button class="btn btn-outline" id="exportHtmlBtn">Export HTML</button>
+      <button class="btn btn-primary" id="exportPdfBtn">Export PDF</button>
+    </div>
+  </header>
+
+  <!-- Main layout -->
+  <div class="editor-layout">
+    <!-- Left panel: step list -->
+    <aside class="steps-panel" id="stepsPanel">
+      <div class="panel-header">
+        <h2 class="panel-title">Steps</h2>
+        <button class="btn-icon" id="clearAllBtn" title="Clear all steps">&#10005; Clear</button>
+      </div>
+
+      <div class="steps-list" id="stepsList">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">&#9654;</div>
+          <p class="empty-title">No steps recorded yet</p>
+          <p class="empty-desc">Start recording in the extension popup to capture steps.</p>
+          <button class="btn btn-outline mt-8" id="refreshBtn">Refresh</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right panel: preview -->
+    <main class="preview-panel" id="previewPanel">
+      <div class="preview-placeholder" id="previewPlaceholder">
+        <div class="preview-icon">&#128247;</div>
+        <p class="preview-hint">Click a step to preview its screenshot</p>
+      </div>
+      <div class="preview-content" id="previewContent" style="display:none;">
+        <div class="preview-header" id="previewHeader"></div>
+        <div class="preview-image-wrap">
+          <img class="preview-image" id="previewImage" src="" alt="Step screenshot" />
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Print-only content -->
+  <div class="print-only" id="printContent"></div>
+
+  <script src="editor.js"></script>
+</body>
+</html>

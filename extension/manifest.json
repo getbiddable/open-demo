@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "open-demo",
+  "version": "1.0.0",
+  "description": "Free open-source Scribe alternative for creating step-by-step guides from browser interactions",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "scripting",
+    "storage",
+    "sidePanel"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "open-demo"
+  },
+  "side_panel": {
+    "default_path": "sidebar/sidebar.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "editor/editor.html",
+        "editor/editor.js",
+        "editor/editor.css"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

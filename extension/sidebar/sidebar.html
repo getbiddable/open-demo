@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>open-demo — Live Preview</title>
+  <link rel="stylesheet" href="sidebar.css" />
+</head>
+<body>
+  <div class="sidebar-container">
+    <header class="sidebar-header">
+      <div class="header-top">
+        <div class="logo">
+          <span class="logo-icon">&#9654;</span>
+          <span class="logo-text">open-demo</span>
+        </div>
+        <button class="btn-editor" id="openEditorBtn">Open Editor</button>
+      </div>
+      <div class="status-bar">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-label" id="statusLabel">Not recording</span>
+        <span class="step-counter" id="stepCounter"></span>
+      </div>
+    </header>
+
+    <div class="steps-list" id="stepsList">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">&#9654;</div>
+        <p class="empty-title">No steps yet</p>
+        <p class="empty-desc">Start recording to capture steps.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidebar.js"></script>
+</body>
+</html>

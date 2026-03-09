@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>open-demo</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">&#9654;</span>
+        <span class="logo-text">open-demo</span>
+      </div>
+      <p class="tagline">Step-by-step guide recorder</p>
+    </header>
+
+    <section class="status-section">
+      <div class="status-indicator" id="statusIndicator">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-label" id="statusLabel">Idle</span>
+      </div>
+      <div class="step-count" id="stepCount">0 steps captured</div>
+    </section>
+
+    <section class="actions">
+      <button class="btn btn-primary" id="recordBtn">
+        Start Recording
+      </button>
+      <button class="btn btn-secondary" id="editorBtn">
+        Open Editor
+      </button>
+    </section>
+
+    <footer class="footer">
+      <a class="footer-link" id="sidebarLink" href="#">Live Preview (Sidebar)</a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

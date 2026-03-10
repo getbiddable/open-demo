@@ -33,17 +33,28 @@ function buildDescription(action, element, value, url, direction) {
 // ─── Screenshot capture ───────────────────────────────────────────────────────
 
 async function captureScreenshot(tabId) {
-  try {
+  const attempt = async () => {
     const tab = await chrome.tabs.get(tabId);
-    const windowId = tab.windowId;
-    const dataUrl = await chrome.tabs.captureVisibleTab(windowId, {
+    // If this tab is no longer active, a new tab has opened and taken focus.
+    // Capturing now would grab the wrong tab — return null instead.
+    if (!tab.active) return null;
+    return await chrome.tabs.captureVisibleTab(tab.windowId, {
       format: 'jpeg',
       quality: 60,
     });
-    return dataUrl;
-  } catch (err) {
-    console.warn('[open-demo] Screenshot capture failed:', err);
-    return null;
+  };
+
+  try {
+    return await attempt();
+  } catch {
+    // Tab may be mid-navigation — wait for it to settle and retry once
+    try {
+      await new Promise(r => setTimeout(r, 500));
+      return await attempt();
+    } catch (err) {
+      console.warn('[open-demo] Screenshot capture failed:', err.message);
+      return null;
+    }
   }
 }
 
@@ -171,16 +182,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const { data } = message;
     const tabId = sender.tab && sender.tab.id;
 
-    // Async: check recording state from storage (SW may have restarted),
-    // capture screenshot, build step, save.
+    // Start screenshot immediately (before storage check) so we capture the
+    // page state at click time, before any scroll/navigation can happen.
     (async () => {
-      const { [STORAGE_KEY_RECORDING]: recording } = await chrome.storage.local.get([STORAGE_KEY_RECORDING]);
+      const [{ [STORAGE_KEY_RECORDING]: recording }, rawScreenshot] = await Promise.all([
+        chrome.storage.local.get([STORAGE_KEY_RECORDING]),
+        tabId ? captureScreenshot(tabId) : Promise.resolve(null),
+      ]);
+
       if (!recording) {
         sendResponse({ ok: false, reason: 'not recording' });
         return;
       }
 
-      let screenshot = tabId ? await captureScreenshot(tabId) : null;
+      let screenshot = rawScreenshot;
       if (screenshot && data.action === 'click' && data.clickX != null && data.clickY != null) {
         screenshot = await annotateClick(screenshot, data.clickX, data.clickY);
       }
@@ -219,4 +234,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   return false;
+});
+
+// ─── Follow navigation: activate content script and record navigate step ──────
+
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status !== 'complete') return;
+  if (!tab.url || !tab.url.startsWith('http')) return;
+
+  const { [STORAGE_KEY_RECORDING]: recording } = await chrome.storage.local.get([STORAGE_KEY_RECORDING]);
+  if (!recording) return;
+
+  // Activate content script on the newly loaded page
+  chrome.tabs.sendMessage(tabId, { type: 'START_RECORDING' }).catch(() => {
+    // Content script not ready yet — it will activate via storage check on its own
+  });
+
+  // Capture screenshot now that the page is fully loaded, and record the navigate step
+  const screenshot = await captureScreenshot(tabId);
+  const step = {
+    id: crypto.randomUUID(),
+    timestamp: Date.now(),
+    action: 'navigate',
+    element: {},
+    value: null,
+    url: tab.url,
+    direction: null,
+    clickX: null,
+    clickY: null,
+    screenshot,
+    description: buildDescription('navigate', null, null, tab.url, null),
+  };
+  const steps = await appendStep(step);
+  broadcastStepsUpdated(steps);
 });

@@ -178,6 +178,8 @@
     }
     if (result.recording) {
       activate();
+      // Navigate step is recorded by background.js onUpdated at page-complete time
+      // (when the page is fully rendered and a proper screenshot can be taken)
     }
   });
 

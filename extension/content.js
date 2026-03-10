@@ -85,10 +85,11 @@
   function onClickCapture(e) {
     if (!isActive) return;
     const el = e.target;
-    // Skip our own injected UI if any
     sendStep({
       action: 'click',
       element: getElementInfo(el),
+      clickX: Math.round(e.clientX * window.devicePixelRatio),
+      clickY: Math.round(e.clientY * window.devicePixelRatio),
     });
   }
 

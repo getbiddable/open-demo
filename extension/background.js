@@ -47,6 +47,41 @@ async function captureScreenshot(tabId) {
   }
 }
 
+// ─── Screenshot annotation ────────────────────────────────────────────────────
+
+async function annotateClick(dataUrl, x, y) {
+  try {
+    const res  = await fetch(dataUrl);
+    const blob = await res.blob();
+    const bitmap = await createImageBitmap(blob);
+
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0);
+
+    const radius = Math.round(bitmap.width * 0.022); // ~2% of width
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(220, 38, 38, 0.25)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(220, 38, 38, 0.95)';
+    ctx.lineWidth = Math.max(2, Math.round(bitmap.width * 0.004));
+    ctx.stroke();
+
+    const out = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.7 });
+    const buf = await out.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 8192) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    }
+    return 'data:image/jpeg;base64,' + btoa(binary);
+  } catch (err) {
+    console.warn('[open-demo] Annotation failed:', err.message);
+    return dataUrl; // fall back to unannotated screenshot
+  }
+}
+
 // ─── Step storage ─────────────────────────────────────────────────────────────
 
 async function getSteps() {
@@ -145,7 +180,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
-      const screenshot = tabId ? await captureScreenshot(tabId) : null;
+      let screenshot = tabId ? await captureScreenshot(tabId) : null;
+      if (screenshot && data.action === 'click' && data.clickX != null && data.clickY != null) {
+        screenshot = await annotateClick(screenshot, data.clickX, data.clickY);
+      }
 
       const description = buildDescription(
         data.action,
@@ -163,6 +201,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         value: data.value || null,
         url: data.url || null,
         direction: data.direction || null,
+        clickX: data.clickX || null,
+        clickY: data.clickY || null,
         screenshot: screenshot,
         description,
       };

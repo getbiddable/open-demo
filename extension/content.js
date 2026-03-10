@@ -145,7 +145,6 @@
   function activate() {
     if (isActive) return;
     isActive = true;
-    console.log('[open-demo] content.js activated on', location.href);
     lastScrollY = window.scrollY;
 
     document.addEventListener('click', onClickCapture, CAPTURE_OPTS);

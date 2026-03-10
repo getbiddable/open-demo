@@ -93,7 +93,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         [STORAGE_KEY_RECORDING]: true,
         [STORAGE_KEY_STEPS]: [],
       });
-      console.log('[open-demo] Recording started, notifying all tabs.');
       await broadcastToTabs({ type: 'START_RECORDING' });
       sendResponse({ ok: true });
     })().catch((err) => {
@@ -141,7 +140,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // capture screenshot, build step, save.
     (async () => {
       const { [STORAGE_KEY_RECORDING]: recording } = await chrome.storage.local.get([STORAGE_KEY_RECORDING]);
-      console.log('[open-demo] STEP_EVENT received, action:', data.action, '| recording:', recording);
       if (!recording) {
         sendResponse({ ok: false, reason: 'not recording' });
         return;
@@ -170,7 +168,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       };
 
       const steps = await appendStep(step);
-      console.log('[open-demo] Step saved, total steps:', steps.length);
       broadcastStepsUpdated(steps);
       sendResponse({ ok: true, stepCount: steps.length });
     })().catch((err) => {

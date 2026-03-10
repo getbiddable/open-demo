@@ -52,9 +52,10 @@ body {
   gap: 8px;
 }
 
-.logo-icon {
-  font-size: 18px;
-  color: var(--accent-red);
+.logo-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 .logo-text {
@@ -67,7 +68,7 @@ body {
 .tagline {
   font-size: 11px;
   color: var(--text-secondary);
-  padding-left: 26px;
+  padding-left: 32px;
 }
 
 /* ── Status section ── */

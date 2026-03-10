@@ -10,6 +10,9 @@
     "storage",
     "sidePanel"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none';"
+  },
   "background": {
     "service_worker": "background.js"
   },
@@ -20,9 +23,21 @@
       "run_at": "document_idle"
     }
   ],
+  "icons": {
+    "16": "icons/icon-black-16.png",
+    "32": "icons/icon-black-32.png",
+    "48": "icons/icon-black-48.png",
+    "128": "icons/icon-black-128.png"
+  },
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "open-demo"
+    "default_title": "open-demo",
+    "default_icon": {
+      "16": "icons/icon-black-16.png",
+      "32": "icons/icon-black-32.png",
+      "48": "icons/icon-black-48.png",
+      "128": "icons/icon-black-128.png"
+    }
   },
   "side_panel": {
     "default_path": "sidebar/sidebar.html"

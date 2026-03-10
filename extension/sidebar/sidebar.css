@@ -63,9 +63,10 @@ body {
   gap: 6px;
 }
 
-.logo-icon {
-  color: var(--accent-red);
-  font-size: 14px;
+.logo-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .logo-text {

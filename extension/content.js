@@ -102,20 +102,6 @@
     });
   }
 
-  function onChangeCapture(e) {
-    if (!isActive) return;
-    const el = e.target;
-    const tag = el.tagName ? el.tagName.toLowerCase() : '';
-    if (!['input', 'textarea', 'select'].includes(tag)) return;
-
-    const value = (el.value || '').substring(0, 50);
-    sendStep({
-      action: 'input',
-      element: getElementInfo(el),
-      value,
-    });
-  }
-
   function onKeydownCapture(e) {
     if (!isActive) return;
     if (e.key !== 'Enter' && e.key !== 'Escape') return;
@@ -155,11 +141,11 @@
   function activate() {
     if (isActive) return;
     isActive = true;
+    console.log('[open-demo] content.js activated on', location.href);
     lastScrollY = window.scrollY;
 
     document.addEventListener('click', onClickCapture, CAPTURE_OPTS);
     document.addEventListener('input', onInputCapture, CAPTURE_OPTS);
-    document.addEventListener('change', onChangeCapture, CAPTURE_OPTS);
     document.addEventListener('keydown', onKeydownCapture, CAPTURE_OPTS);
     window.addEventListener('scroll', onScrollCapture, CAPTURE_OPTS);
     window.addEventListener('popstate', onNavigate, CAPTURE_OPTS);
@@ -173,7 +159,6 @@
 
     document.removeEventListener('click', onClickCapture, CAPTURE_OPTS);
     document.removeEventListener('input', onInputCapture, CAPTURE_OPTS);
-    document.removeEventListener('change', onChangeCapture, CAPTURE_OPTS);
     document.removeEventListener('keydown', onKeydownCapture, CAPTURE_OPTS);
     window.removeEventListener('scroll', onScrollCapture, CAPTURE_OPTS);
     window.removeEventListener('popstate', onNavigate, CAPTURE_OPTS);
@@ -183,6 +168,10 @@
   // ─── Bootstrap: check current recording state ──────────────────────────────
 
   chrome.storage.local.get(['recording'], (result) => {
+    if (chrome.runtime.lastError) {
+      console.warn('[open-demo] Failed to read recording state:', chrome.runtime.lastError.message);
+      return;
+    }
     if (result.recording) {
       activate();
     }

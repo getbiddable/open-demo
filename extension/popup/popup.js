@@ -51,27 +51,13 @@ recordBtn.addEventListener('click', () => {
     // Stop recording: notify background, which will open editor
     chrome.runtime.sendMessage({ type: 'STOP_RECORDING' }, (response) => {
       if (chrome.runtime.lastError) return;
-      // Notify content script on the active tab
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, { type: 'STOP_RECORDING' }).catch(() => {});
-        }
-      });
       updateUI(false, null);
-      // Refresh step count after a short delay
-      setTimeout(getState, 300);
       window.close();
     });
   } else {
     // Start recording
     chrome.runtime.sendMessage({ type: 'START_RECORDING' }, (response) => {
       if (chrome.runtime.lastError) return;
-      // Notify content script on the active tab
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, { type: 'START_RECORDING' }).catch(() => {});
-        }
-      });
       updateUI(true, 0);
       window.close();
     });

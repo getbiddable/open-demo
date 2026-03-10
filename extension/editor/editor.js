@@ -242,6 +242,10 @@ function selectStep(stepId) {
 
 function loadSteps() {
   chrome.storage.local.get(['guide_steps'], (result) => {
+    if (chrome.runtime.lastError) {
+      console.warn('[open-demo editor] loadSteps error:', chrome.runtime.lastError.message);
+      return;
+    }
     steps = result.guide_steps || [];
     renderSteps();
   });
@@ -303,8 +307,9 @@ function exportHTML() {
       .replace(/"/g, '&quot;');
 
   const stepCards = steps.map((step, i) => {
-    const imgTag = step.screenshot
-      ? `<img src="${step.screenshot}" alt="Step ${i + 1}" class="step-img" />`
+    const validScreenshot = step.screenshot && step.screenshot.startsWith('data:image/') ? step.screenshot : null;
+    const imgTag = validScreenshot
+      ? `<img src="${validScreenshot}" alt="Step ${i + 1}" class="step-img" />`
       : '<div class="step-img-placeholder">No screenshot</div>';
 
     return `
@@ -380,8 +385,9 @@ function exportPDF() {
       .replace(/>/g, '&gt;');
 
   const stepsHtml = steps.map((step, i) => {
-    const imgTag = step.screenshot
-      ? `<img class="print-step-img" src="${step.screenshot}" alt="Step ${i + 1}" />`
+    const validScreenshot = step.screenshot && step.screenshot.startsWith('data:image/') ? step.screenshot : null;
+    const imgTag = validScreenshot
+      ? `<img class="print-step-img" src="${validScreenshot}" alt="Step ${i + 1}" />`
       : '';
     return `
     <div class="print-step">

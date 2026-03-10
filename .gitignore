@@ -1,0 +1,5 @@
+VPS-README.md
+.claude
+plan.md
+backend/node_modules/
+*.env

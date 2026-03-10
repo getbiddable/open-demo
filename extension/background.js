@@ -6,12 +6,8 @@ const STORAGE_KEY_RECORDING = 'recording';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
-let isRecording = false;
-
-// Restore state on service worker startup
-chrome.storage.local.get([STORAGE_KEY_RECORDING], (result) => {
-  isRecording = !!result[STORAGE_KEY_RECORDING];
-});
+// NOTE: Do not cache isRecording in memory — service workers restart and lose state.
+// Always read from chrome.storage.local for recording state checks.
 
 // ─── Template-based description generator ────────────────────────────────────
 
@@ -71,6 +67,15 @@ async function appendStep(step) {
 
 // ─── Broadcast to sidebar / any listeners ────────────────────────────────────
 
+async function broadcastToTabs(message) {
+  const tabs = await chrome.tabs.query({ url: ['http://*/*', 'https://*/*'] });
+  for (const tab of tabs) {
+    chrome.tabs.sendMessage(tab.id, message).catch(() => {
+      // Tab may not have content script (e.g. chrome:// pages) — ignore
+    });
+  }
+}
+
 function broadcastStepsUpdated(steps) {
   chrome.runtime.sendMessage({ type: 'STEPS_UPDATED', steps }).catch(() => {
     // No listeners open — safe to ignore
@@ -83,28 +88,42 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const { type } = message;
 
   if (type === 'START_RECORDING') {
-    isRecording = true;
-    chrome.storage.local.set({
-      [STORAGE_KEY_RECORDING]: true,
-      [STORAGE_KEY_STEPS]: [],
+    (async () => {
+      await chrome.storage.local.set({
+        [STORAGE_KEY_RECORDING]: true,
+        [STORAGE_KEY_STEPS]: [],
+      });
+      console.log('[open-demo] Recording started, notifying all tabs.');
+      await broadcastToTabs({ type: 'START_RECORDING' });
+      sendResponse({ ok: true });
+    })().catch((err) => {
+      console.error('[open-demo] START_RECORDING error:', err);
+      sendResponse({ ok: false });
     });
-    sendResponse({ ok: true });
-    return false;
+    return true; // async response
   }
 
   if (type === 'STOP_RECORDING') {
-    isRecording = false;
-    chrome.storage.local.set({ [STORAGE_KEY_RECORDING]: false });
-    // Open editor in new tab
-    chrome.tabs.create({ url: chrome.runtime.getURL('editor/editor.html') });
-    sendResponse({ ok: true });
-    return false;
+    (async () => {
+      await chrome.storage.local.set({ [STORAGE_KEY_RECORDING]: false });
+      await broadcastToTabs({ type: 'STOP_RECORDING' });
+      chrome.tabs.create({ url: chrome.runtime.getURL('editor/editor.html') });
+      sendResponse({ ok: true });
+    })().catch((err) => {
+      console.error('[open-demo] STOP_RECORDING error:', err);
+      sendResponse({ ok: false });
+    });
+    return true; // async response
   }
 
   if (type === 'GET_STATE') {
-    getSteps().then((steps) => {
-      sendResponse({ isRecording, stepCount: steps.length });
-    });
+    (async () => {
+      const [steps, { [STORAGE_KEY_RECORDING]: recording }] = await Promise.all([
+        getSteps(),
+        chrome.storage.local.get([STORAGE_KEY_RECORDING]),
+      ]);
+      sendResponse({ isRecording: !!recording, stepCount: steps.length });
+    })();
     return true; // async
   }
 
@@ -115,16 +134,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (type === 'STEP_EVENT') {
-    if (!isRecording) {
-      sendResponse({ ok: false, reason: 'not recording' });
-      return false;
-    }
-
     const { data } = message;
     const tabId = sender.tab && sender.tab.id;
 
-    // Async: capture screenshot, build step, save
+    // Async: check recording state from storage (SW may have restarted),
+    // capture screenshot, build step, save.
     (async () => {
+      const { [STORAGE_KEY_RECORDING]: recording } = await chrome.storage.local.get([STORAGE_KEY_RECORDING]);
+      console.log('[open-demo] STEP_EVENT received, action:', data.action, '| recording:', recording);
+      if (!recording) {
+        sendResponse({ ok: false, reason: 'not recording' });
+        return;
+      }
+
       const screenshot = tabId ? await captureScreenshot(tabId) : null;
 
       const description = buildDescription(
@@ -148,9 +170,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       };
 
       const steps = await appendStep(step);
+      console.log('[open-demo] Step saved, total steps:', steps.length);
       broadcastStepsUpdated(steps);
       sendResponse({ ok: true, stepCount: steps.length });
-    })();
+    })().catch((err) => {
+      console.error('[open-demo] STEP_EVENT error:', err);
+      sendResponse({ ok: false, reason: err.message });
+    });
 
     return true; // async response
   }

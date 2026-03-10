@@ -10,6 +10,9 @@
     "storage",
     "sidePanel"
   ],
+  "host_permissions": [
+    "https://od.salandru.com/*"
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none';"
   },

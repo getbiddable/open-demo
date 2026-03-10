@@ -409,6 +409,60 @@ function exportPDF() {
   window.print();
 }
 
+// ─── Share ────────────────────────────────────────────────────────────────────
+
+const shareBtn       = document.getElementById('shareBtn');
+const shareToast     = document.getElementById('shareToast');
+const shareToastMsg  = document.getElementById('shareToastMsg');
+const shareToastCopy = document.getElementById('shareToastCopy');
+const shareToastClose = document.getElementById('shareToastClose');
+
+let shareUrl = null;
+
+async function shareGuide() {
+  if (steps.length === 0) {
+    alert('No steps to share yet.');
+    return;
+  }
+
+  shareBtn.textContent = 'Sharing…';
+  shareBtn.disabled = true;
+
+  try {
+    const res = await fetch('https://od.salandru.com/api/guides', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: getTitle(), steps }),
+    });
+
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+
+    const { url } = await res.json();
+    shareUrl = url;
+    shareToastMsg.textContent = url;
+    shareToast.style.display = 'flex';
+  } catch (err) {
+    alert(`Share failed: ${err.message}`);
+  } finally {
+    shareBtn.textContent = 'Share';
+    shareBtn.disabled = false;
+  }
+}
+
+shareBtn.addEventListener('click', shareGuide);
+
+shareToastCopy.addEventListener('click', () => {
+  if (!shareUrl) return;
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    shareToastCopy.textContent = 'Copied!';
+    setTimeout(() => { shareToastCopy.textContent = 'Copy link'; }, 2000);
+  });
+});
+
+shareToastClose.addEventListener('click', () => {
+  shareToast.style.display = 'none';
+});
+
 // ─── Event listeners ──────────────────────────────────────────────────────────
 
 exportMdBtn.addEventListener('click', exportMarkdown);

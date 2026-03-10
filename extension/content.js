@@ -70,10 +70,14 @@
 
   function sendStep(data) {
     if (!isActive) return;
-    chrome.runtime.sendMessage({ type: 'STEP_EVENT', data }).catch((err) => {
-      // Extension context may have been invalidated — silently ignore
-      console.debug('[open-demo] sendStep error:', err);
-    });
+    try {
+      chrome.runtime.sendMessage({ type: 'STEP_EVENT', data }).catch((err) => {
+        console.debug('[open-demo] sendStep error:', err);
+      });
+    } catch (err) {
+      // Extension was reloaded — context is gone, stop capturing
+      deactivate();
+    }
   }
 
   // ─── Event handlers ────────────────────────────────────────────────────────

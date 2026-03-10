@@ -35,7 +35,7 @@ app.post('/api/guides', async (req, res) => {
       'INSERT INTO guides (id, title, steps) VALUES ($1, $2, $3)',
       [id, title || 'Untitled Guide', JSON.stringify(steps)]
     );
-    res.json({ id, url: `https://od.slandru.com/g/${id}` });
+    res.json({ id, url: `https://od.salandru.com/g/${id}` });
   } catch (err) {
     console.error('[open-demo] Failed to save guide:', err.message);
     res.status(500).json({ error: 'Failed to save guide' });

@@ -28,7 +28,8 @@
     <div class="toolbar-right">
       <button class="btn btn-outline" id="exportMdBtn">Export Markdown</button>
       <button class="btn btn-outline" id="exportHtmlBtn">Export HTML</button>
-      <button class="btn btn-primary" id="exportPdfBtn">Export PDF</button>
+      <button class="btn btn-outline" id="exportPdfBtn">Export PDF</button>
+      <button class="btn btn-share" id="shareBtn">Share</button>
     </div>
   </header>
 
@@ -64,6 +65,13 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- Share toast -->
+  <div class="share-toast" id="shareToast" style="display:none;">
+    <span class="share-toast-msg" id="shareToastMsg"></span>
+    <button class="share-toast-copy" id="shareToastCopy">Copy link</button>
+    <button class="share-toast-close" id="shareToastClose">×</button>
   </div>
 
   <!-- Print-only content -->
